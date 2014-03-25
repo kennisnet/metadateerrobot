@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python2
 # -*- coding: utf-8 -*-
 
 from common import common
@@ -9,9 +9,9 @@ import argparse
 """ Start parsing input """
 parser = argparse.ArgumentParser(description='Edurep DB insert script')
 parser.add_argument('-a', '--action', nargs=1, help='insert or delete', metavar='action', dest='action')
-parser.add_argument('-c', '--config', nargs=1, help='Config file', metavar='configfile', dest='configfile')
+parser.add_argument('-c', '--config', nargs=1, help='config file', metavar='configfile', dest='configfile')
 parser.add_argument('-i', '--identifier', nargs=1, help='record identifier', metavar='identifier', dest='identifier')
-parser.add_argument('-p', '--path', nargs=1, help='record identifier', metavar='path', dest='path')
+parser.add_argument('-p', '--path', nargs=1, help='record path', metavar='path', dest='path')
 
 args = parser.parse_args()
 

@@ -7,6 +7,7 @@ def getConfig(configfile,section):
 
 	config_options = {}
 	options = Config.options(section)
+
 	for option in options:
 		try:
 			config_options[option] = Config.get(section, option)
@@ -25,3 +26,9 @@ def getRe(x):
 		'dash': "-",
 		}.get(x, False)
 
+
+""" Dynamically import a method """
+def importFrom(module,name):
+    import importlib
+    module = __import__(module, fromlist=[name])
+    return getattr(module, name)
