@@ -31,13 +31,16 @@ if args.part:
     else:
         parser.error('Input a valid action')
 
-    """ get config for part """
+    # get common config
+    config = common.getConfig(configfile,'common')
+
+    # get config for part
     try:
-        config = common.getConfig(configfile,part)
+        config.update(common.getConfig(configfile,part))
     except:
         parser.error('Invalid part: ' + part)
 
-    """ load and start process class """
+    # load and start process class
     try:
         process = common.importFrom(part,'process')
         P = process.Process(config,action)
