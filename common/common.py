@@ -22,7 +22,7 @@ def getConfig(configfile,section):
 
 def getRe(x):
 	return {
-		'uuid': "[0-F]{8}-[0-F]{4}-[0-F]{4}-[0-F]{4}-[0-F]{12}",
+		'uuid': "^[0-F]{8}-[0-F]{4}-[0-F]{4}-[0-F]{4}-[0-F]{12}$",
 		'dash': "-",
 		}.get(x, False)
 

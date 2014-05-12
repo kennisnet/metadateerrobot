@@ -12,10 +12,9 @@ class ParseQueryLog:
     def __init__(self,config,logfilepath):
         self.DB = MySQLdb.connect(host=config["db_host"],user=config["db_user"], passwd=config["db_passwd"],db=config["db_name"],use_unicode=1)
         self.logfilepath = logfilepath
-
         self.re_uuid = re.compile(common.getRe('uuid'), re.I)
         self.re_dash = re.compile(common.getRe('dash'))
-        
+
         self.processLogfiles()
 
 
@@ -62,18 +61,15 @@ class ParseQueryLog:
 
     def storeData(self, keyword, discipline):
         c = self.DB.cursor()
-        
-        keyword_id = str(database.getKeywordId(self.DB,keyword))
-        
+        keyword_id = database.getKeywordId(self.DB,keyword)
+
         if self.re_uuid.match(discipline):
-            keyword_count = 0
             discipline_bin_id = self.re_dash.sub("",discipline)
-            #query = "SELECT keyword_count FROM keyword_discipline_count_querylogs WHERE keyword_id = %s AND discipline_id_bin = HEX(%s)"
             query = "SELECT keyword_count FROM keyword_discipline_count_querylogs WHERE keyword_id = %s AND discipline_id_bin = UNHEX(%s);"
             c.execute(query,(keyword_id,discipline_bin_id))
-            row = c.fetchone()             
+            row = c.fetchone()
 
-            if row:                
+            if row:
                 keyword_count = int(row[0])
                 keyword_count += 1
                 query = "UPDATE keyword_discipline_count_querylogs SET keyword_count=%s WHERE keyword_id = %s AND discipline_id_bin = UNHEX(%s);"
@@ -82,42 +78,9 @@ class ParseQueryLog:
                 query = "INSERT INTO keyword_discipline_count_querylogs (keyword_id,discipline_id_bin,keyword_count) VALUES (%s,UNHEX(%s),1);"
                 c.execute(query,(keyword_id,discipline_bin_id))
 
-            
-            
-
-
-
-
-
-
-        
-
-        #for resultCombination in self.queryResultSet:
-            #print resultCombination
-            #testje = ''
-            #for key, value in resultCombination:
-                #print key, "   ----    ", value
-                #first, find out if combination exists
-                #table = keywords
-                #fields = id, keyword
-                #query = "SELECT FROM ke"
-                #c.execute(query, (key,value))
-                #row = c.fetchone()
-
-                #if row:
-                    #table = keyword_discipline_count_querylogs
-                    #fields = keyword_id, discipline_id_bin, keyword_count
-                    #update number of occurences
-                    #query = "UPDATE ..........."
-                #else:
-                    #insert new combination
-                    #query = "INSERT ..........."
-
         c.close()
 
 
-
-                
 
 class QueryLogLineSplitter:
     """ Splits a line from the Edurep query log """
