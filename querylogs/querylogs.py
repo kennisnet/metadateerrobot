@@ -14,7 +14,7 @@ class ParseQueryLog:
         self.logfilepath = logfilepath
 
         self.re_uuid = re.compile(common.getRe('uuid'), re.I)
-	self.re_dash = re.compile(common.getRe('dash'))
+        self.re_dash = re.compile(common.getRe('dash'))
         
         self.processLogfiles()
 

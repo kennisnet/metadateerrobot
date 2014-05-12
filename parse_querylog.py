@@ -14,7 +14,7 @@ parser.add_argument('-p', '--path', nargs=1, help='Path of logfiles', metavar='p
 
 args = parser.parse_args()
 
-logfilepath = args.path[0]
+
 
 """ Validating input """
 if args.configfile:
@@ -23,6 +23,13 @@ if args.configfile:
         parser.error('Invalid config file: ' + configfile)
 else:
     configfile = "metadateerrobot.cfg"
+
+if args.path:
+    logfilepath = args.path[0]
+    if not os.path.isdir(logfilepath):
+        parser.error('Invalid logfile path: ' + logfilepath)
+else:
+    parser.error('Provide a logfile path')
 
 
 """ get config for source """
