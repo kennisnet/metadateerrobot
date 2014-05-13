@@ -6,7 +6,7 @@ import os
 import re
 import urllib
 from cqlparser import parseString
-
+from fnmatch import filter
 
 class ParseQueryLog:
     def __init__(self,config,logfilepath):
@@ -14,49 +14,63 @@ class ParseQueryLog:
         self.logfilepath = logfilepath
         self.re_uuid = re.compile(common.getRe('uuid'), re.I)
         self.re_dash = re.compile(common.getRe('dash'))
+        self.re_querylog = re.compile(r'([\d|-]+)T([\d|:]+)Z ([\d|\.]+) ([\d|\.]+)K ([\d|\.]+)s (\d*)[hits-]* [\w|\/]* (.*)')
 
         self.processLogfiles()
 
 
-    def processLogfiles(self):      
+    def processLogfiles(self):
         for root,dirs,files in os.walk(self.logfilepath):
-            for file in files:
-                if file.endswith(".log"):
-                    print file
-                    f=open(os.path.join(root,file), 'r')
-                    for line in f:
-                        if not 'smdBroker' in line:              
-                            queryLineSplitter = QueryLogLineSplitter()
-                            query = queryLineSplitter.splitLine(line)
-                            
-                            if query:
-                                cqlstring = ''
-                                try:
-                                    cqlstring = parseString(query)
-                                except:
-                                    print("Error in CQL parsing: %s" % query)
-                                else:
-                                    termExtractor = TermExtractor()
-                                    termExtractor.extractTerms(cqlstring)
+            for file in filter(files, "*.log"):
+                print file
+                f=open(os.path.join(root,file), 'r')
+                for line in f:
+                    if not 'smdBroker' in line:
+                        query = self.getQuery(line)
 
-                                    uniqueTerms = []
-                                    for term in termExtractor.returnTerms:
-                                        term = term.replace('~', '').replace('*', '').replace('"','').replace('_','')
-                                        if term not in uniqueTerms:
-                                            uniqueTerms.append(term)
+                        if query:
+                            cqlstring = ''
+                            try:
+                                cqlstring = parseString(query)
+                            except:
+                                print("Error in CQL parsing: %s" % query)
+                            else:
+                                termExtractor = TermExtractor()
+                                termExtractor.extractTerms(cqlstring)
 
-                                    uniqueDisciplines = []
-                                    for discipline in termExtractor.discipline:
-                                        if discipline not in uniqueDisciplines:
-                                            uniqueDisciplines.append(discipline)
-                                    
-                                    for uniqueTerm in uniqueTerms:
-                                        for uniqueDiscipline in uniqueDisciplines:
-                                            self.storeData(uniqueTerm, uniqueDiscipline)
-    
-                                           
+                                uniqueTerms = []
+                                for term in termExtractor.returnTerms:
+                                    term = term.replace('~', '').replace('*', '').replace('"','').replace('_','')
+                                    if term not in uniqueTerms:
+                                        uniqueTerms.append(term)
 
-                    f.close()
+                                uniqueDisciplines = []
+                                for discipline in termExtractor.discipline:
+                                    if discipline not in uniqueDisciplines:
+                                        uniqueDisciplines.append(discipline)
+
+                                for uniqueTerm in uniqueTerms:
+                                    for uniqueDiscipline in uniqueDisciplines:
+                                        self.storeData(uniqueTerm, uniqueDiscipline)
+
+                f.close()
+
+
+    """ Returns the raw query from a line from the Edurep query log """
+    def getQuery(self,logline):
+        query = ''
+        rawquery = ''
+        matchObj = self.re_querylog.match(logline)
+
+        if matchObj:
+            if matchObj.group(7):
+                rawquery = matchObj.group(7)
+
+        for qarg in rawquery.split('&'):
+            if qarg.startswith("query="):
+                query = urllib.unquote(qarg[6:]).replace('+',' ')
+
+        return query
 
 
     def storeData(self, keyword, discipline):
@@ -79,35 +93,6 @@ class ParseQueryLog:
                 c.execute(query,(keyword_id,discipline_bin_id))
 
         c.close()
-
-
-
-class QueryLogLineSplitter:
-    """ Splits a line from the Edurep query log """
-    def __init__(self):
-        self.linestring = ''
-        self.rawquery = ''
-        self.query = ''
-
-    def splitLine(self,linestring):
-        """ Returns the raw query from a line from the Edurep query log """
-        import re
-
-        self.linestring = linestring
-
-        matchObj = re.match( r'([\d|-]+)T([\d|:]+)Z ([\d|\.]+) ([\d|\.]+)K ([\d|\.]+)s (\d*)[hits-]* [\w|\/]* (.*)', self.linestring)
-
-        if matchObj:
-            if matchObj.group(7):
-                self.rawquery = matchObj.group(7)
-
-        for qarg in self.rawquery.split('&'):
-            if qarg.startswith("query="):
-                self.query = urllib.unquote(qarg[6:]).replace('+',' ')
-
-        return self.query
-
-
 
 
 class TermExtractor:
