@@ -57,7 +57,12 @@ class UpdateMetadata:
 
 		if xmltree.xpath('/lom:lom/lom:general/lom:keyword/lom:langstring', namespaces=ns):
 			for kw in xmltree.xpath('/lom:lom/lom:general/lom:keyword/lom:langstring', namespaces=ns):
-				self.keywords.append(kw.text)
+				if len(kw.text) > 1:
+					if len(kw.text) > 100 and kw.text.count(",") > 3:
+						for real_kw in kw.text.split(","):
+							self.keywords.append(real_kw)
+					else:
+						self.keywords.append(kw.text)
 
 		if xmltree.xpath('/lom:lom/lom:educational/lom:context/lom:value/lom:langstring', namespaces=ns):
 			for context in xmltree.xpath('/lom:lom/lom:educational/lom:context/lom:value/lom:langstring', namespaces=ns):
