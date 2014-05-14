@@ -1,0 +1,20 @@
+[common]
+db_host=localhost
+db_user=root
+db_passwd=*******
+db_name=metadateerrobot
+
+[metadata]
+db_host=localhost
+db_user=root
+db_passwd=*******
+db_name=metadateerrobot
+
+[opentaal]
+src_db_path=/home/user/OpenTaal-210G-basis-gekeurd-en-flexievormen.txt
+
+[analyzer]
+outfile=analyzer.csv
+treshold_amount = 20
+treshold_spread = 5
+treshold_ratio = 5

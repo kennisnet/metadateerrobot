@@ -3,7 +3,7 @@
 
 from common import common
 import os.path
-from sys import exit
+from sys import exit, exc_info
 import argparse
 
 
@@ -46,6 +46,7 @@ if args.part:
         P = process.Process(config,action)
     except:
         print("Cannot load module for part: " + part)
+        print "Unexpected error: ", exc_info()[0]
         exit()
 
     P.start()

@@ -8,20 +8,17 @@ class Process:
         self.DB = MySQLdb.connect(host=config["db_host"],user=config["db_user"], passwd=config["db_passwd"],db=config["db_name"],use_unicode=1)
         self.action = action
         self.config = config
-        self.treshold_amount = 20
-        self.treshold_spread = 5
-        self.treshold_ratio = 5
         self.output = codecs.open(self.config["outfile"],'w','utf-8')
 
 
     def start(self):
-        if self.action == "metadata":
-            self.analyzeDisciplineCounts()
+        if self.action == "metadata" or self.action == "querylogs":
+            self.analyzeDisciplineCounts(self.action)
         else:
-            print("Invalid action, try metadata")
+            print("Invalid action, try metadata or querylogs")
 
 
-    def analyzeDisciplineCounts(self):
+    def analyzeDisciplineCounts(self,table_ext):
         c = self.DB.cursor()
         query = "SELECT id,keyword FROM keywords"
         c.execute(query)
@@ -30,21 +27,21 @@ class Process:
         for row in kwdata:
             keyword_id = row[0]
             keyword = row[1]
-            count = self.selectSumKeyword(keyword_id)
+            count = self.selectSumKeyword(table_ext,keyword_id)
 
-            if count > self.treshold_amount:
-                data = self.selectKeywordCounts(keyword_id)
-                if len(data) > self.treshold_spread:
-                    if data[0][1] > (count / self.treshold_ratio):
+            if count > int(self.config["treshold_amount"]):
+                data = self.selectKeywordCounts(table_ext,keyword_id)
+                if len(data) > int(self.config["treshold_spread"]):
+                    if data[0][1] > (count / int(self.config["treshold_ratio"])):
                         self.output.write( keyword + "," + str(count) + "," + str(len(data)) + "," + self.makeUuid(data[0][0]) + "\n" )
 
         c.close()
         self.output.close()
 
 
-    def selectSumKeyword(self,keyword_id):
+    def selectSumKeyword(self,table_ext,keyword_id):
         c = self.DB.cursor()
-        query = "SELECT SUM(keyword_count) AS countsum FROM keyword_discipline_count_metadata WHERE keyword_id = %s"
+        query = "SELECT SUM(keyword_count) AS countsum FROM keyword_discipline_count_%s WHERE keyword_id = %%s" % table_ext
         c.execute(query,(keyword_id))
         row = c.fetchone()
         c.close()
@@ -58,11 +55,11 @@ class Process:
             return 0
 
 
-    def selectKeywordCounts(self,keyword_id):
+    def selectKeywordCounts(self,table_ext,keyword_id):
         c = self.DB.cursor()
-        query = "SELECT HEX(discipline_id_bin) AS discipline_id_bin, keyword_count FROM keyword_discipline_count_metadata \
-            WHERE keyword_id = %s \
-            ORDER BY keyword_count DESC"
+        query = "SELECT HEX(discipline_id_bin) AS discipline_id_bin, keyword_count FROM keyword_discipline_count_%s \
+            WHERE keyword_id = %%s \
+            ORDER BY keyword_count DESC" % table_ext
         c.execute(query,(keyword_id))
         data = c.fetchall()
         c.close()
