@@ -11,6 +11,8 @@ from fnmatch import filter
 class ParseQueryLog:
     def __init__(self,config,logfilepath):
         self.DB = MySQLdb.connect(host=config["db_host"],user=config["db_user"], passwd=config["db_passwd"],db=config["db_name"],use_unicode=1)
+        self.DB.set_character_set('utf8')
+
         self.logfilepath = logfilepath
         self.re_uuid = re.compile(common.getRe('uuid'), re.I)
         self.re_dash = re.compile(common.getRe('dash'))
